@@ -2,14 +2,16 @@
 window.addEventListener('scroll', () => {
     // Send message to background script with scroll data
     try{
-        chrome.runtime.sendMessage({
-        action: 'storeScroll',
-        scrollData: {
+        let scrollData= {
             timestamp: Date.now(),
             scrollY: window.scrollY
         }
+        
+        chrome.runtime.sendMessage({
+        action: 'storeScroll',
+        scrollData: scrollData
         });
-        console.log("Sent messages");
+        console.log("scrollData: ", scrollData);
     }catch(e){
         console.log("Error while sending messages: ", e)
     }
