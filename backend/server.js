@@ -45,60 +45,21 @@ const postDataSchema = new mongoose.Schema({
 // Define the model for post data
 const PostData = mongoose.model('PostData', postDataSchema);
 
-// Function to insert or update scroll data for a user
-// async function insertOrUpdateScrollData(userId, scrollData) {
-//     try {
-//         // Find the document with the specified userId
-//         let existingDoc = await ScrollData.findOne({ userId: userId });
-
-//         if (existingDoc) {
-//             // If document exists, update the scrollData array
-//             existingDoc.scrollData.push(scrollData);
-//             await existingDoc.save();
-//             console.log('Scroll data updated in existing document in MongoDB');
-//         } else {
-//             // If document does not exist, create a new one
-//             existingDoc = new ScrollData({ userId: userId, scrollData: [scrollData] });
-//             await existingDoc.save();
-//             console.log('New document created in MongoDB');
-//         }
-//     } catch (error) {
-//         console.error('Error inserting or updating scroll data into MongoDB:', error);
-//     }
-// }
-
-// Function to insert or update scroll data for a user
-async function insertOrUpdateScrollData(userId, scrollData) {
-    try {
-        // Find the document with the specified userId
-        let existingDoc = await ScrollData.findOne({ userId: userId });
-
-        if (existingDoc) {
-            // If document exists, update the scrollData array
-            existingDoc.scrollData.push(scrollData);
-
-            // Sort the scrollData array based on the timestamp
-            existingDoc.scrollData.sort((a, b) => a.timestamp - b.timestamp);
-
-            await existingDoc.save();
-            console.log('Scroll data updated in existing document in MongoDB');
-        } else {
-            // If document does not exist, create a new one
-            existingDoc = new ScrollData({ userId: userId, scrollData: [scrollData] });
-            await existingDoc.save();
-            console.log('New document created in MongoDB');
-        }
-    } catch (error) {
-        console.error('Error inserting or updating scroll data into MongoDB:', error);
-    }
-}
-
-// Route to handle POST requests
 app.post('/scroll-data', (req, res) => {
-    const userId = '123'; // Hardcoded user id for now
-    const scrollData = req.body;
-    insertOrUpdateScrollData(userId, scrollData); // Insert or update scroll data into MongoDB
-    res.sendStatus(200);
+    const { userId, scrollData } = req.body;
+    ScrollData.findOneAndUpdate(
+        { userId: userId },
+        { $push: { scrollData: scrollData } },
+        { upsert: true, new: true }
+    )
+    .then(doc => {
+        console.log('Scroll data stored successfully:', doc);
+        res.sendStatus(200);
+    })
+    .catch(err => {
+        console.error('Error storing scroll data:', err);
+        res.status(500).send('Internal Server Error');
+    });
 });
 
 // Function to insert or update post data for a user
